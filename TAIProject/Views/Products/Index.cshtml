@@ -1,0 +1,81 @@
+﻿@model IEnumerable<TAIProject.Models.ProductIndexModel>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+
+<form asp-controller="Products" asp-action="Index">
+    <p>
+        Title: <input type="text" name="SearchString" />
+        <input type="submit" value="Filter" />
+    </p>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Product.Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Product.Picture)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Product.AmountInStore)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Product.Description)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Product.UnitPrice)
+            </th>
+            <th>
+                Category
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Product.Name)
+            </td>
+            <td>
+                @if (item.Product.Picture != null)
+                {
+                    <img id="profilePicture" style="width:50px;height:50px; object-fit:cover" src="data:image/*;base64,@(Convert.ToBase64String(item.Product.Picture))">
+                }
+                else
+                {
+                    <img id="profilePicture" style="width:50px;height:50px; object-fit:cover" src="">
+                }
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Product.AmountInStore)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Product.Description)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Product.UnitPrice)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Category.Name)
+            </td>
+            <td>
+                <a asp-controller="cart" asp-action="buy" asp-route-id="@item?.Product.Id">Buy Now</a>
+                <a asp-action="Edit" asp-route-id="@item.Product.Id">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Product.Id">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.Product.Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

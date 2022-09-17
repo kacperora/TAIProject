@@ -1,0 +1,81 @@
+﻿@model TAIProject.Models.OrderItemView
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>Order</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Adress)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Adress)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CreatedDate)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.CreatedDate)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Total)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Total)
+        </dd>
+        </dl>
+        
+</div>
+        <table class="table table-striped">
+    <thead>
+        <tr>
+            <td>
+                Product name
+            </td>
+            <td>
+                Picture
+            </td>
+            <td>
+                amount
+            </td>
+            <td>
+                Price per one
+            </td>
+        </tr>
+        </thead>
+
+    <tbody>
+        @foreach (var i in Model.items)
+        {
+        <tr>
+        <td>@i.Product.Name</td>
+            <td>
+                @if (i.Product.Picture != null)
+                {
+                    <img id="profilePicture" style="width:50px;height:50px; object-fit:cover" src="data:image/*;base64,@(Convert.ToBase64String(i.Product.Picture))">
+                }
+                else
+                {
+                    <img id="profilePicture" style="width:50px;height:50px; object-fit:cover" src="">
+                }
+            </td>
+            <td>
+                @i.ProductAmount.ToString()
+            </td>
+            <td>
+                @i.Product.UnitPrice.ToString()
+            </td>
+        </tr>
+        }
+        
+    </tbody>
+    </table>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>
