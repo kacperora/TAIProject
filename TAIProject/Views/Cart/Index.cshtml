@@ -1,4 +1,8 @@
-﻿<html>
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<User> SignInManager
+@inject UserManager<User> UserManager
+
+<html>
 <head>
     <meta name="viewport" content="width=device-width" />
     <title>Index</title>
@@ -40,7 +44,13 @@
     </table>
     <br>
     <a asp-controller="products" asp-action="index">Continue Shopping</a>
-    <a asp-controller="orders" asp-action="AddOrderFromBasket">Go to payment</a>
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <a asp-controller="orders" asp-action="AddOrderFromBasket">Go to payment</a>
+    } else
+    {
+        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Go to payment</a>
+    }
 
 </body>
 </html>

@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using TAIProject.Data;
 using TAIProject.Helpers;
 using TAIProject.Models;
@@ -23,7 +27,9 @@ namespace TAIProject.Controllers
         {
             _context = context;
             _httpClient = new HttpClient();
-            
+            _httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", "3e5cac39-7e38-4139-8fd6-30adc06a61bd");
+
         }
 
         // GET: Orders
@@ -31,14 +37,18 @@ namespace TAIProject.Controllers
         {
             if (_context.Order != null)
             {
-                if (User.IsInRole("moderator") | User.IsInRole("admin"))
+                if (User.IsInRole("Moderator") | User.IsInRole("Admin"))
                 {
                     return View(await _context.Order.ToListAsync());
-                } else
+                } else if (User.IsInRole("Basic"))
                 {
                     var id = _context.Users.FirstOrDefaultAsync(u => u.UserName == User.Identity.Name).Result.Id;
                     var ordersUser = await _context.Order.Where(o => o.UserID == id).ToListAsync();
                     return View(ordersUser);
+                } else
+                {
+                    return NotFound();
+
                 }
             } else
             {
@@ -66,6 +76,7 @@ namespace TAIProject.Controllers
             view.CreatedDate = order.CreatedDate;
             view.UserID = order.UserID;
             view.Total = order.Total;
+            view.Id = order.Id;
             var items = await _context.OrderProduct.Where(o => o.OrderId == order.Id).ToListAsync();
             foreach(var item in items)
             {
@@ -119,7 +130,7 @@ namespace TAIProject.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Adress,CreatedDate,UserID")] Order order)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Adress,CreatedDate")] Order order)
         {
             if (id != order.Id)
             {
@@ -246,15 +257,21 @@ namespace TAIProject.Controllers
         {
             var json = new JSONOrderCreateRequest();
 
-            var order = await _context.Order
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var order = await _context.Order.FirstOrDefaultAsync(m => m.Id == id);
             var items = await _context.OrderProduct.Where(o => o.OrderId == order.Id).ToListAsync();
             var customer = await _context.Users.FindAsync(order.UserID);
             json.totalAmount = order.Total.ToString();
             json.extOrderId = order.Id.ToString();
             json.customerIP = Request.Host.Host;
+            json.notifyUrl = "https://107f-46-204-44-227.eu.ngrok.io/Orders/RecieveConfirmPayU";
+            json.buyer = new();
             json.buyer.email = customer.Email;
-            json.buyer.phone = customer.PhoneNumber;
+            try {
+                json.buyer.phone = customer.PhoneNumber;
+            }
+            catch (NullReferenceException e) { 
+                json.buyer.phone = "";
+            }
             json.buyer.firstName = customer.FirstName;
             json.buyer.lastName = customer.LastName;
             json.buyer.language = "en";
@@ -268,24 +285,34 @@ namespace TAIProject.Controllers
                     unitPrice = (item.Price*item.ProductAmount*100).ToString()
                 });
             }
-            string jsonString = JsonSerializer.Serialize(json);
+            string jsonString = System.Text.Json.JsonSerializer.Serialize(json);
             var content = new StringContent(jsonString, Encoding.UTF8, "application/json");
+            content.Headers.ContentType = new MediaTypeWithQualityHeaderValue("application/json");
+
             var result = await _httpClient.PostAsync("https://secure.snd.payu.com/api/v2_1/orders ", content);
-            return null;
+            return RedirectToAction(nameof(Index));
         }
         [HttpPost]
-        public ActionResult RecieveConfirmPayU(String model)
+        [AllowAnonymous]
+        public async Task<IActionResult> RecieveConfirmPayU()
         {
-            if (model != null)
+            Stream req = Request.Body;
+            string bodyText = await new StreamReader(req).ReadToEndAsync();
+            dynamic json = JsonConvert.DeserializeObject(bodyText);
+            if (json.status.statusCode == "SUCCESS")
             {
-                return Json("Success");
+                var id = json.extOrderId;
+                var url = json.redirectUri;
+                var order = _context.Order.Find(new Guid((string)id));
+                order.PaymentState = "Pending";
+                _context.Update(order);
+                _context.SaveChanges();
+                return Redirect((string)url);
             }
-            else
-            {
-                return Json("An Error Has occoured");
-            }
+            return RedirectToAction(nameof(Index));
 
         }
+
         private bool OrderExists(Guid id)
         {
           return (_context.Order?.Any(e => e.Id == id)).GetValueOrDefault();
