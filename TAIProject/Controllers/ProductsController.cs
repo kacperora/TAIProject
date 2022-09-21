@@ -21,7 +21,7 @@ namespace TAIProject.Controllers
         }
 
         // GET: Products
-        public async Task<IActionResult> Index(string searchString)
+        public async Task<IActionResult> Index(string searchString, string Category)
         {
             var products = _context.Product.ToList();
             var categories = _context.Category.ToList();
@@ -31,12 +31,17 @@ namespace TAIProject.Controllers
                        select new ProductIndexModel
                        {
                            Product = prod,
-                           Category = cat
+                           Category = cat,
                        };
+
 
             if (!String.IsNullOrEmpty(searchString))
             {
                 view = view.Where(s => s.Product.Name!.Contains(searchString));
+            }
+            if (!String.IsNullOrEmpty(Category))
+            {
+                view = view.Where(s => s.Category.Name!.Contains(Category));
             }
             return View(view);
         }

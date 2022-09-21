@@ -27,8 +27,12 @@ namespace TAIProject.Controllers
         {
             _context = context;
             _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", "3e5cac39-7e38-4139-8fd6-30adc06a61bd");
+
+        }
+
+        public async void getAuthToken()
+        {
+
 
         }
 
@@ -130,6 +134,7 @@ namespace TAIProject.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin, Moderator")]
         public async Task<IActionResult> Edit(Guid id, [Bind("Adress,CreatedDate")] Order order)
         {
             if (id != order.Id)
@@ -242,7 +247,7 @@ namespace TAIProject.Controllers
             var request = new JSONOrderCreateRequest();
             request.extOrderId = order.Id.ToString();
             request.notifyUrl = "";
-            request.customerIP = HttpContext.Connection.RemoteIpAddress.ToString();
+            request.customerIp = HttpContext.Connection.RemoteIpAddress.ToString();
             request.totalAmount = (order.Total*100).ToString();
             request.buyer.email = customer.Email;
             request.buyer.phone = customer.PhoneNumber;
@@ -255,15 +260,32 @@ namespace TAIProject.Controllers
 
         public async Task<IActionResult> PayU(Guid id)
         {
-            var json = new JSONOrderCreateRequest();
+            var str = "grant_type=client_credentials&client_id=445952&client_secret=b3ce7526de7f6d383528ad5c266f27e7";
+            var content = new StringContent(str, Encoding.UTF8, "application/x-www-form-urlencoded");
+            var response = await _httpClient.PostAsync("https://secure.snd.payu.com/pl/standard/user/oauth/authorize", content);
 
+            Stream req = response.Content.ReadAsStream();
+            string bodyText = await new StreamReader(req).ReadToEndAsync();
+            dynamic ret = JsonConvert.DeserializeObject(bodyText);
+            var token = ret.access_token;
+            _httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", token.Value);
+
+            var json = new JSONOrderCreateRequest();
             var order = await _context.Order.FirstOrDefaultAsync(m => m.Id == id);
             var items = await _context.OrderProduct.Where(o => o.OrderId == order.Id).ToListAsync();
             var customer = await _context.Users.FindAsync(order.UserID);
             json.totalAmount = order.Total.ToString();
             json.extOrderId = order.Id.ToString();
-            json.customerIP = Request.Host.Host;
-            json.notifyUrl = "https://107f-46-204-44-227.eu.ngrok.io/Orders/RecieveConfirmPayU";
+            if (Request.Host.Host != "localhost")
+            {
+
+                json.customerIp = Request.Host.Host;
+            } else
+            {
+                json.customerIp = "46.204.44.227";
+            }
+            json.notifyUrl = "https://80fe-46-204-44-227.eu.ngrok.io/Orders/RecieveConfirmPayU";
             json.buyer = new();
             json.buyer.email = customer.Email;
             try {
@@ -275,9 +297,17 @@ namespace TAIProject.Controllers
             json.buyer.firstName = customer.FirstName;
             json.buyer.lastName = customer.LastName;
             json.buyer.language = "en";
+            decimal sum = 0;
             foreach (var item in items)
             {
                 var product = await _context.Product.FindAsync(item.ProductID);
+                if (product.AmountInStore < item.ProductAmount)
+                {
+
+                }
+                product.AmountInStore -= item.ProductAmount;
+                _context.Product.Update(product);
+                sum += item.Price * item.ProductAmount;
                 json.products.Add(new OrderItem
                 {
                     name = product.Name,
@@ -285,31 +315,46 @@ namespace TAIProject.Controllers
                     unitPrice = (item.Price*item.ProductAmount*100).ToString()
                 });
             }
-            string jsonString = System.Text.Json.JsonSerializer.Serialize(json);
-            var content = new StringContent(jsonString, Encoding.UTF8, "application/json");
+            json.totalAmount = (sum*100).ToString();
+            string jsonString = JsonConvert.SerializeObject(json);
+            content = new StringContent(jsonString, Encoding.UTF8, "application/json");
             content.Headers.ContentType = new MediaTypeWithQualityHeaderValue("application/json");
 
             var result = await _httpClient.PostAsync("https://secure.snd.payu.com/api/v2_1/orders ", content);
-            return RedirectToAction(nameof(Index));
+
+            var url = result.RequestMessage.RequestUri.ToString();
+            return Redirect(url);
         }
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> RecieveConfirmPayU()
+        public async void RecieveConfirmPayU()
         {
             Stream req = Request.Body;
             string bodyText = await new StreamReader(req).ReadToEndAsync();
             dynamic json = JsonConvert.DeserializeObject(bodyText);
-            if (json.status.statusCode == "SUCCESS")
+            var id = json.order.extOrderId;
+            var order = _context.Order.Find(new Guid((string)id));
+            if (order is not null)
             {
-                var id = json.extOrderId;
-                var url = json.redirectUri;
-                var order = _context.Order.Find(new Guid((string)id));
-                order.PaymentState = "Pending";
-                _context.Update(order);
-                _context.SaveChanges();
-                return Redirect((string)url);
+                if (json.order.status == "PENDING")
+                {
+                    order.PaymentState = "Pending";
+                    _context.Update(order);
+                    _context.SaveChanges();
+                }
+                else if (json.order.status == "COMPLETED")
+                {
+                    order.PaymentState = "Completed";
+                    _context.Update(order);
+                    _context.SaveChanges();
+                }
+                else if (json.order.status == "CANCELLED")
+                {
+                    order.PaymentState = "Cancelled";
+                    _context.Update(order);
+                    _context.SaveChanges();
+                }
             }
-            return RedirectToAction(nameof(Index));
 
         }
 

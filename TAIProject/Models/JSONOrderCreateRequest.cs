@@ -3,8 +3,8 @@
     public class JSONOrderCreateRequest
     {
         public string notifyUrl;
-        public string customerIP;
-        public string merchantPosId = "300746";
+        public string customerIp;
+        public string merchantPosId = "445952";
         public string description = "sent from TAIProject";
         public string currencyCode = "PLN";
         public string totalAmount;

@@ -76,7 +76,8 @@
     </tbody>
     </table>
 <div>
-    <a asp-action="PayU" asp-route-id="@Model?.Id">Pay with PayU</a> |
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    @if (Model.PaymentState == "New") {
+        <a asp-action="PayU" asp-route-id="@Model?.Id">Pay with PayU</a>
+          }
     <a asp-action="Index">Back to List</a>
 </div>

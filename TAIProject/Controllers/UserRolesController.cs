@@ -15,6 +15,7 @@ namespace TAIProject.Controllers
             _roleManager = roleManager;
             _userManager = userManager;
         }
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index()
         {
             var users = await _userManager.Users.ToListAsync();
@@ -31,6 +32,7 @@ namespace TAIProject.Controllers
             }
             return View(userRolesViewModel);
         }
+        [Authorize(Roles = "Admin")]
         private async Task<List<string>> GetUserRoles(User user)
         {
             return new List<string>(await _userManager.GetRolesAsync(user));
@@ -67,6 +69,7 @@ namespace TAIProject.Controllers
             return View(model);
         }
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Manage(List<ManageRolesViewModel> model, string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);

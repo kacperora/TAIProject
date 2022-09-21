@@ -19,6 +19,7 @@ namespace TAIProject.Controllers
         {
             _context = context;
         }
+        [Authorize(Roles = "Admin, Moderator")]
 
         // GET: Categories
         public async Task<IActionResult> Index()
@@ -27,6 +28,7 @@ namespace TAIProject.Controllers
                         View(await _context.Category.ToListAsync()) :
                         Problem("Entity set 'ApplicationDbContext.Category'  is null.");
         }
+        [Authorize(Roles = "Admin, Moderator")]
 
         // GET: Categories/Details/5
         public async Task<IActionResult> Details(Guid? id)
@@ -94,6 +96,7 @@ namespace TAIProject.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin, Moderator")]
         public async Task<IActionResult> Edit(Guid id, [Bind("Id,Name")] Category category)
         {
             if (id != category.Id)
