@@ -79,6 +79,7 @@ namespace TAIProject.Controllers
             view.Adress = order.Adress;
             view.CreatedDate = order.CreatedDate;
             view.UserID = order.UserID;
+            view.PaymentState = order.PaymentState;
             view.Total = order.Total;
             view.Id = order.Id;
             var items = await _context.OrderProduct.Where(o => o.OrderId == order.Id).ToListAsync();
@@ -134,16 +135,19 @@ namespace TAIProject.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin, Moderator")]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Adress,CreatedDate")] Order order)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Adress")] Order order)
         {
             if (id != order.Id)
             {
                 return NotFound();
+            } else
+            {
+
+                var orderorg = await _context.Order.FindAsync(id);
+                orderorg.Adress = order.Adress;
+                order = orderorg;
             }
 
-            if (ModelState.IsValid)
-            {
                 try
                 {
                     _context.Update(order);
@@ -161,7 +165,6 @@ namespace TAIProject.Controllers
                     }
                 }
                 return RedirectToAction(nameof(Index));
-            }
             return View(order);
         }
 
@@ -285,7 +288,7 @@ namespace TAIProject.Controllers
             {
                 json.customerIp = "46.204.44.227";
             }
-            json.notifyUrl = "https://80fe-46-204-44-227.eu.ngrok.io/Orders/RecieveConfirmPayU";
+            json.notifyUrl = "https://5e96-46-204-32-26.eu.ngrok.io/Orders/RecieveConfirmPayU";
             json.buyer = new();
             json.buyer.email = customer.Email;
             try {
