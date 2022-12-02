@@ -4,12 +4,6 @@
       "ignored": "true",
       "type": "mssql",
       "connectionId": "ConnectionStrings:DefaultConnection"
-    },
-    "mssql2": {
-      "secretStore": "AzureAppSettings",
-      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Sql/servers/test-server-koracz/databases/TAIProject_db",
-      "type": "mssql.azure",
-      "connectionId": "ConnectionString"
     }
   }
 }
