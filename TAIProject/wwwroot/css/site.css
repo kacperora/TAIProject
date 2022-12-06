@@ -8,6 +8,21 @@ html {
   }
 }
 
+@media screen and (max-width: 640px) {
+    .searchbar {
+        display: block;
+    }
+}
+
+html {
+    background-color: grey;
+}
+
+body {
+    margin: 50px;
+    background-color: white;
+}
+
 html {
   position: relative;
   min-height: 100%;
@@ -15,4 +30,51 @@ html {
 
 body {
   margin-bottom: 60px;
+}
+
+table.table {
+    border: 1px solid #1C6EA4;
+    background-color: #EEEEEE;
+    width: 100%;
+    text-align: left;
+    border-collapse: collapse;
+}
+
+    table.table td, table.table th {
+        border: 1px solid #AAAAAA;
+        padding: 3px 2px;
+    }
+
+    table.table tbody td {
+        font-size: 13px;
+    }
+
+    table.table tbody tr:nth-child(even) {
+        background: #D0E4F5;
+    }
+
+    table.table thead {
+        background: #1C6EA4;
+        border-bottom: 2px solid #444444;
+    }
+
+        table.table thead th {
+            background: #1C6EA4;
+            border-bottom: 2px solid #444444;
+            font-size: 15px;
+            font-weight: bold;
+            color: #FFFFFF;
+            border-left: 2px solid #D0E4F5;
+        }
+
+            table.table thead th:first-child {
+                border-left: none;
+            }
+
+    table.table tfoot td {
+        font-size: 14px;
+    }
+
+a.highlight {
+    font-weight: bold;
 }

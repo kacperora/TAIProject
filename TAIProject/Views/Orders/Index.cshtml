@@ -6,12 +6,15 @@
 
 <h1>Index</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
 <table class="table">
     <thead>
         <tr>
+              @if (User.IsInRole("Admin") || User.IsInRole("Moderator"))
+{
+            <th>
+                @Html.DisplayNameFor(model => model.UserID)
+            </th>
+}
             <th>
                 @Html.DisplayNameFor(model => model.CreatedDate)
             </th>
@@ -26,7 +29,12 @@
     </thead>
     <tbody>
 @foreach (var item in Model) {
-        <tr>
+        <tr>              @if (User.IsInRole("Admin") || User.IsInRole("Moderator"))
+{
+            <td>
+                @Html.DisplayFor(modelItem => item.UserID)
+            </td>
+}
             <td>
                 @Html.DisplayFor(modelItem => item.CreatedDate)
             </td>

@@ -288,7 +288,7 @@ namespace TAIProject.Controllers
             {
                 json.customerIp = "46.204.44.227";
             }
-            json.notifyUrl = "https://5e96-46-204-32-26.eu.ngrok.io/Orders/RecieveConfirmPayU";
+            json.notifyUrl = "https://swbo.azurewebsites.net/";
             json.buyer = new();
             json.buyer.email = customer.Email;
             try {

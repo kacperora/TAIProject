@@ -18,7 +18,7 @@ namespace TAIProject.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index()
         {
-            var users = await _userManager.Users.ToListAsync();
+            var users = _userManager.Users.ToList();
             var userRolesViewModel = new List<UserRolesViewModel>();
             foreach (User user in users)
             {
@@ -49,7 +49,8 @@ namespace TAIProject.Controllers
             }
             ViewBag.UserName = user.UserName;
             var model = new List<ManageRolesViewModel>();
-            foreach (var role in _roleManager.Roles)
+            var roles = await _roleManager.Roles.ToListAsync();
+            foreach (var role in roles)
             {
                 var userRolesViewModel = new ManageRolesViewModel
                 {

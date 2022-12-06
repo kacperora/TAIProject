@@ -133,6 +133,7 @@ namespace TAIProject.Controllers
             }
 
             var product = await _context.Product.FindAsync(id);
+            _context.Entry(product).State = EntityState.Detached;
             if (product == null)
             {
                 return NotFound();
@@ -152,7 +153,6 @@ namespace TAIProject.Controllers
             {
                 return NotFound();
             }
-
             var file = Request.Form.Files["Picture"];
             if (file!= null) {
                 using (var memoryStream = new MemoryStream())

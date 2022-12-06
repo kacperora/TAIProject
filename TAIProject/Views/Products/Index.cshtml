@@ -5,20 +5,22 @@
 }
 
 <h1>Products</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+   @if (User.IsInRole("Admin") || User.IsInRole("Moderator"))
+{
+    <p>
+        <a asp-action="Create">Create New</a>
+    </p>
+}
 
 <form asp-controller="Products" asp-action="Index">
     <p>
-        Title: <input type="text" name="SearchString" />
-        Category: <input type="text" name="Category" />
+        Title: <input class="searchbar" type="text" name="SearchString" />
+        Category: <input class="searchbar" type="text" name="Category" />
         <input type="submit" value="Filter" />
     </p>
 </form>
 
-<table class="blueTable">
+<table class="table">
     <thead>
         <tr>
             <th>
@@ -29,9 +31,6 @@
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Product.AmountInStore)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Product.Description)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Product.UnitPrice)
@@ -62,17 +61,14 @@
                 @Html.DisplayFor(modelItem => item.Product.AmountInStore)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Product.Description)
-            </td>
-            <td>
                 @Html.DisplayFor(modelItem => item.Product.UnitPrice)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Category.Name)
             </td>
             <td>
-                <a asp-controller="cart" asp-action="buy" asp-route-id="@item?.Product.Id">Buy Now</a> |
-                <a asp-action="Details" asp-route-id="@item.Product.Id">Details</a> 
+                <a class="highlight" asp-controller="cart" asp-action="buy" asp-route-id="@item?.Product.Id">Buy Now</a> |
+                <a class="highlight" asp-action="Details" asp-route-id="@item.Product.Id">Details</a> 
                         |
                 
                         @if (User.IsInRole("Admin") || User.IsInRole("Moderator"))
