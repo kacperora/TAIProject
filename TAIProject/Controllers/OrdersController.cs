@@ -263,7 +263,7 @@ namespace TAIProject.Controllers
 
         public async Task<IActionResult> PayU(Guid id)
         {
-            var str = "grant_type=client_credentials&client_id=445952&client_secret=b3ce7526de7f6d383528ad5c266f27e7";
+            var str = "grant_type=client_credentials&client_id=457973&client_secret=461eebdd68b14892af98958c1ed21538";
             var content = new StringContent(str, Encoding.UTF8, "application/x-www-form-urlencoded");
             var response = await _httpClient.PostAsync("https://secure.snd.payu.com/pl/standard/user/oauth/authorize", content);
 
@@ -288,7 +288,7 @@ namespace TAIProject.Controllers
             {
                 json.customerIp = "46.204.44.227";
             }
-            json.notifyUrl = "https://swbo.azurewebsites.net/";
+            json.notifyUrl = "https://swbo.azurewebsites.net/Orders/RecieveConfirmPayU";
             json.buyer = new();
             json.buyer.email = customer.Email;
             try {
@@ -306,7 +306,7 @@ namespace TAIProject.Controllers
                 var product = await _context.Product.FindAsync(item.ProductID);
                 if (product.AmountInStore < item.ProductAmount)
                 {
-
+                    return View(order);
                 }
                 product.AmountInStore -= item.ProductAmount;
                 _context.Product.Update(product);
@@ -344,6 +344,13 @@ namespace TAIProject.Controllers
                     order.PaymentState = "Pending";
                     _context.Update(order);
                     _context.SaveChanges();
+                    foreach (var item in _context.OrderProduct.Where(item => item.OrderId == order.Id ).ToList())
+                    {
+                        var product = _context.Product.Find(item.ProductID);
+                        product.AmountInStore -= item.ProductAmount;
+                        _context.Update(product);
+                        _context.SaveChanges();
+                    }
                 }
                 else if (json.order.status == "COMPLETED")
                 {

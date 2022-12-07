@@ -4,7 +4,7 @@
     {
         public string notifyUrl;
         public string customerIp;
-        public string merchantPosId = "445952";
+        public string merchantPosId = "457973";
         public string description = "sent from TAIProject";
         public string currencyCode = "PLN";
         public string totalAmount;
